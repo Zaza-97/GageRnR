@@ -31,6 +31,9 @@ class ReportGenerator():
     def addDoc(self, obj):
         doc = self.getObjectDoc(obj)
         self.report += '\n' + doc
+    
+    def addCustDocc(self, filename):
+        self.report += '\n' + resource_string('GageRnR.resources', filename).decode("utf-8")
 
     def addTable(self, table):
         table = table.replace('<table>', '<table class="table table-striped">')
