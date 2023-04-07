@@ -60,9 +60,9 @@ def positiveIntegers(values, minValue):
 
 
 def checkIntegerList(name, values, minValue=0):
-    if(len(values) != 3):
+    if (len(values) != 3):
         raise AttributeError(name, " can only have three values.")
-    if(not positiveIntegers(values, minValue)):
+    if (not positiveIntegers(values, minValue)):
         raise AttributeError(name, " can only be positive integers.")
 
 
@@ -76,10 +76,10 @@ class Application():
         self.delimiter = str(arguments["--delimiter"])
         self.scalar = float(arguments["--multiply"])
 
-        if(arguments["--groundTruth"] is not None):
+        if (arguments["--groundTruth"] is not None):
             self.gt = toFloat(arguments["--groundTruth"])
 
-        if(arguments["--output"] is not None):
+        if (arguments["--output"] is not None):
             self.outputFolder = arguments["--output"]
 
     def check(self):
@@ -89,6 +89,7 @@ class Application():
         checkIntegerList("Axes", self.axes)
 
     def run(self):
+
         loader = GageRnR.DataLoader()
         data = loader.load(
             file=self.file,
@@ -119,6 +120,10 @@ class Application():
         rg.addTitle(g.title)
         rg.addDoc(g)
         rg.addTable(g.summary(tableFormat="html"))
+        rg.addCustDocc('VarianceAnalysis.html')
+        rg.addTable(g.summary_2(tableFormat="html"))
+        rg.addCustDocc('VarianceAnalysisNoInteraction.html')
+        rg.addTable(g.summary_3(tableFormat="html"))
 
         rg.addTitle(s.title)
         rg.addDoc(s)
