@@ -11,15 +11,51 @@ class Component(Enum):
     PART = 1
     OPERATOR_BY_PART = 2
     MEASUREMENT = 3
-    TOTAL = 4
+    MEASUREMENT_WITHOUT_INTERACTION = 4
+    TOTAL = 5
+
+
+class MyComponent(Enum):
+    GRR = 0
+    EV = 1
+    AV = 2
+    OPERATOR_BY_PART = 3
+    PV = 4
+    TOTAL_VAR = 5
+
+
+class ComponentNoInter(Enum):
+    GRR_WITHOUT_INTERACTION = 0
+    EV_WITHOUT_INTERACTION = 1
+    AV = 2
+    OPERATOR_BY_PART = 3
+    PV = 4
+    TOTAL_VAR = 5
 
 
 ComponentNames = {
     Component.OPERATOR: 'Operator',
     Component.PART: 'Part',
     Component.OPERATOR_BY_PART: 'Operator by Part',
-    Component.MEASUREMENT: 'Measurement',
-    Component.TOTAL: 'Total'}
+    Component.MEASUREMENT: 'Measurement (with interaction)',
+    Component.TOTAL: 'Total',
+    Component.MEASUREMENT_WITHOUT_INTERACTION: 'Measurement (without interaction)'}
+
+MyComponentNames = {
+    MyComponent.GRR: 'GRR',
+    MyComponent.EV: 'Equipment (Repetability)',
+    MyComponent.AV: 'Operators',
+    MyComponent.OPERATOR_BY_PART: 'Interaction',
+    MyComponent.PV: 'Parts',
+    MyComponent.TOTAL_VAR: 'Total'}
+
+ComponentNamesNoInter = {
+    ComponentNoInter.GRR_WITHOUT_INTERACTION: 'GRR without interaction',
+    ComponentNoInter.EV_WITHOUT_INTERACTION: 'Equipment (Repetability) without interaction',
+    ComponentNoInter.AV: 'Operators',
+    ComponentNoInter.OPERATOR_BY_PART: 'Interaction',
+    ComponentNoInter.PV: 'Parts',
+    ComponentNoInter.TOTAL_VAR: 'Total'}
 
 
 class Result(Enum):
@@ -37,6 +73,13 @@ class Result(Enum):
     K = 10
     Bias = 11
 
+    Std_results = 12
+    Std_percentage = 13
+    Std_results_without_interaction = 14
+    Std_percentage_without_interaction = 15
+    Variance = 16
+    Variance_no_inter = 17
+
 
 ResultNames = {
     Result.Mean: 'Mean',
@@ -52,13 +95,15 @@ class Statistics(object):
         self.parts = data.shape[1]
         self.operators = data.shape[0]
         self.measurements = data.shape[2]
+
         if labels is None:
             self.labels = {}
         else:
             self.labels = labels
 
         if "Operator" not in self.labels:
-            self.labels["Operator"] = [("Operator %d" % x) for x in range(self.operators)]
+            self.labels["Operator"] = [("Operator %d" % x)
+                                       for x in range(self.operators)]
 
         if "Part" not in self.labels:
             self.labels["Part"] = [("Part %d" % x) for x in range(self.parts)]
@@ -90,6 +135,20 @@ class Statistics(object):
             table,
             headers=headers,
             tablefmt=tableFormat)
+
+    def summary_mio(self, precision='.3f'):
+        """Convert result to tabular."""
+        if not hasattr(self, 'result'):
+            raise Exception(
+                'Statistics.calculate() should be run before calling summary()')
+
+        table = []
+        results = [Result.Mean, Result.Std]
+        self.addToTable(results, Component.TOTAL, table, precision)
+        self.addToTable(results, Component.OPERATOR, table, precision)
+        self.addToTable(results, Component.PART, table, precision)
+
+        return table
 
     def createOperatorsBoxData(self):
         data = []
@@ -127,11 +186,12 @@ class Statistics(object):
         size = self.result[results[0]][component].size
         for i in range(0, self.result[results[0]][component].size):
             name = ComponentNames[component]
-            if(size > 1):
+            if (size > 1):
                 name += ' ' + str(i)
             row = [name]
             for result in results:
-                row.append(format(self.result[result][component][i], precision))
+                row.append(
+                    format(self.result[result][component][i], precision))
             table.append(row)
 
     def calculateMean(self):
@@ -177,8 +237,8 @@ class Statistics(object):
     def dataToParts(self):
         data = np.transpose(self.data, axes=(1, 0, 2))
         return data.reshape(
-                self.parts,
-                self.measurements*self.operators)
+            self.parts,
+            self.measurements*self.operators)
 
     def dataToOperators(self):
         return self.data.reshape(
